@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/application-research/edge-vertex/core"
 	"github.com/application-research/edge-vertex/util"
 	"github.com/urfave/cli/v2"
 )
@@ -36,6 +37,13 @@ func SetupCommands() []*cli.Command {
 				Value:       "edges.json",
 				EnvVars:     []string{"EDGE_FILE"},
 			},
+			&cli.IntFlag{
+				Name:        "interval",
+				Usage:       "interval in seconds between each run",
+				DefaultText: "300",
+				Value:       300,
+				EnvVars:     []string{"INTERVAL"},
+			},
 		},
 
 		Action: func(cctx *cli.Context) error {
@@ -44,7 +52,15 @@ func SetupCommands() []*cli.Command {
 			fmt.Printf("\n--\n")
 			fmt.Println("API is available at" + util.Red + " 127.0.0.1:" + cctx.String("port") + util.Reset)
 
-			return EdgePollingDaemon(cctx)
+			interval := cctx.Int("interval")
+			edgeListFilename := cctx.String("edge-file")
+
+			daemon := core.NewEdgeDaemon(interval, edgeListFilename)
+
+			daemon.Run()
+			return nil
 		},
 	})
+
+	return commands
 }
