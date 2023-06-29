@@ -5,9 +5,15 @@ import (
 	"os"
 )
 
-func ReadEdgeList(filename string) ([]string, error) {
+type ListReader interface {
+	Read() ([]string, error)
+}
+
+type JsonEdgeListReader struct{ Filename string }
+
+func (r JsonEdgeListReader) Read() ([]string, error) {
 	// Read the file from disk
-	file, err := os.Open(filename)
+	file, err := os.Open(r.Filename)
 	if err != nil {
 		return nil, err
 	}

@@ -7,16 +7,14 @@ import (
 	"net/http"
 )
 
-type Edge struct {
-	URI string
+type EdgeApi interface {
+	GetContents(edgeUri string) (*OpenBucketsResponse, error)
 }
 
-func NewEdge(uri string) *Edge {
-	return &Edge{URI: uri}
-}
+type EdgeUrid struct{}
 
-func (e *Edge) GetOpenBuckets() (*OpenBucketsResponse, error) {
-	resp, err := http.Get(e.URI + "/buckets/get-open")
+func (e *EdgeUrid) GetContents(edgeUri string) (*OpenBucketsResponse, error) {
+	resp, err := http.Get(edgeUri + "/buckets/get-open")
 	if err != nil {
 		return nil, fmt.Errorf("could not reach edge api: %s", err)
 	}

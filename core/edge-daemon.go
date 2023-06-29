@@ -15,6 +15,8 @@ type EdgeDaemon struct {
 	edgeListFilename string
 	attemptedCids    map[string]bool // Map of CIDs that have already been queried - to avoid duplicate queries to DDM
 	DDM              *s.DDMApi
+	listReader       s.ListReader
+	edgeApi          s.EdgeApi
 	totalSuccess     int
 	totalFail        int
 	// TODO: this could use a lot of memory as it's indexing all CIDs across all edges - maybe use a bloom filter or some other approach instead?
@@ -29,6 +31,8 @@ func NewEdgeDaemon(interval int, edgeListFilename string, ddmUrl string, ddmKey 
 	return &EdgeDaemon{
 		interval:         interval,
 		edgeListFilename: edgeListFilename,
+		listReader:       &s.JsonEdgeListReader{Filename: edgeListFilename},
+		edgeApi:          &s.EdgeUrid{},
 		attemptedCids:    make(map[string]bool),
 		DDM:              s.NewDDMApi(ddmUrl, ddmKey),
 	}
@@ -52,29 +56,25 @@ func (ed *EdgeDaemon) Run() {
 	}
 }
 
+// Collects a list of contents from all Edges, deduplicates them into a map
 // TODO: run in a separate goroutine for each Edge for better performance
 func (ed *EdgeDaemon) aggregateContent() (map[string]s.BucketContent, error) {
 	result := make(map[string]s.BucketContent)
 
 	// Read the edge.json file from disk at the beginning of each run, so it can be modified without restarting the daemon
-	edgeAddrs, err := s.ReadEdgeList(ed.edgeListFilename)
+	edgeAddrs, err := ed.listReader.Read()
 
 	if err != nil {
 		return result, fmt.Errorf("error reading edge list: %s", err)
 	}
 
-	var edges []s.Edge
-	for _, e := range edgeAddrs {
-		edges = append(edges, *s.NewEdge(e))
-	}
-
 	// Loop through the list of []edge URIs, for each one query it for available contents
 	// Aggregate them all into a single list of all contents - removing duplicates that have the same CID
-	for _, e := range edges {
-		cnt, err := e.GetOpenBuckets()
+	for _, e := range edgeAddrs {
+		cnt, err := ed.edgeApi.GetContents(e)
 
 		if err != nil {
-			log.Errorf("error getting open buckets for edge %s: %s", e.URI, err)
+			log.Errorf("error getting open buckets for edge %s: %s", e, err)
 			continue
 		}
 
@@ -96,6 +96,7 @@ func (ed *EdgeDaemon) aggregateContent() (map[string]s.BucketContent, error) {
 	return result, nil
 }
 
+// Publishes the list of contents to DDM
 func (ed *EdgeDaemon) publishContent(contents map[string]s.BucketContent) (int, int) {
 	var request s.ContentsRequest
 
