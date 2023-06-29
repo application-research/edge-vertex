@@ -25,10 +25,10 @@ edge-vertex \
   --ddm-token <token> \
   --interval 60 \ # optional, defaults to 60 seconds
   --edge-file edge.json \ # optional, defaults to edge.json
-  --log-file edge-vertex.log # optional, defaults to edge-vertex.log
+  --debug  # optional, more verbose logging
 ```
 
-3. Check `edge-vertex.log` for log output if anything fails
+3. Check `log output` for log output if anything fails
 
 ## DDM Set-Up
 - Tag that is present on `edge` must also exist as a `dataset name` in DDM, otherwise it will simply not add the content
