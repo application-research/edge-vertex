@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 )
 
@@ -34,7 +35,42 @@ func UnmarshalContentsResponse(data []byte) (ContentsResponse, error) {
 }
 
 func NewDDMApi(baseUrl string, authKey string) *DDMApi {
-	return &DDMApi{baseUrl: baseUrl, authKey: authKey}
+	d := &DDMApi{baseUrl: baseUrl, authKey: authKey}
+
+	err := d.healthCheck()
+	if err != nil {
+		log.Fatalf("could not connect to ddm %s", err)
+	}
+
+	return d
+}
+
+func (d *DDMApi) healthCheck() error {
+	req, err := http.NewRequest(http.MethodGet, d.baseUrl+"/api/v1/health", nil)
+	if err != nil {
+		return fmt.Errorf("could not construct http request %v", err)
+	}
+
+	req.Header.Set("Authorization", "Bearer "+d.authKey)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("could not make http request %s", err)
+	}
+
+	if resp.StatusCode != 200 {
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf(string(body))
+	}
+
+	return err
 }
 
 // Publishes a list of contents to DDM

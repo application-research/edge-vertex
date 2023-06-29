@@ -52,12 +52,13 @@ type BucketContent struct {
 	PieceCID    string        `json:"piece_cid"`
 	PayloadCID  string        `json:"payload_cid"`
 	DirCID      string        `json:"dir_cid"`
-	PieceSize   int           `json:"piece_size"`
+	PieceSize   uint          `json:"piece_size"`
 	DownloadURL string        `json:"download_url"`
 	Status      ContentStatus `json:"status"`
-	Size        int           `json:"size"`
+	Size        uint          `json:"size"`
 	CreatedAt   string        `json:"created_at"`
 	UpdatedAt   string        `json:"updated_at"`
+	Collection  string        `json:"collection"`
 }
 
 type ContentStatus string

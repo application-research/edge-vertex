@@ -5,6 +5,7 @@ import (
 
 	"github.com/application-research/edge-vertex/core"
 	"github.com/application-research/edge-vertex/util"
+	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
 
@@ -44,18 +45,29 @@ func SetupCommands() []*cli.Command {
 				Value:       300,
 				EnvVars:     []string{"INTERVAL"},
 			},
+			&cli.BoolFlag{
+				Name:  "debug",
+				Usage: "set to enable debug logging output",
+			},
 		},
 
 		Action: func(cctx *cli.Context) error {
-			logo := `Edge Vertex`
+			logo := `𝔼𝕕𝕘𝕖 𝕍𝕖𝕣𝕥𝕖𝕩`
 			fmt.Println(util.Purple + logo + util.Reset)
 			fmt.Printf("\n--\n")
-			fmt.Println("API is available at" + util.Red + " 127.0.0.1:" + cctx.String("port") + util.Reset)
+			fmt.Println("running content aggregation every" + util.Red + cctx.String("interval") + util.Reset + "seconds")
 
 			interval := cctx.Int("interval")
 			edgeListFilename := cctx.String("edge-file")
+			debug := cctx.Bool("debug")
+			ddmUrl := cctx.String("ddm-api")
+			ddmKey := cctx.String("ddm-token")
 
-			daemon := core.NewEdgeDaemon(interval, edgeListFilename)
+			if debug {
+				log.SetLevel(log.DebugLevel)
+			}
+
+			daemon := core.NewEdgeDaemon(interval, edgeListFilename, ddmUrl, ddmKey)
 
 			daemon.Run()
 			return nil

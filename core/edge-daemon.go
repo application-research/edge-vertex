@@ -6,21 +6,21 @@ import (
 	"time"
 
 	s "github.com/application-research/edge-vertex/services"
-	logging "github.com/ipfs/go-log/v2"
+	"github.com/application-research/edge-vertex/util"
+	log "github.com/sirupsen/logrus"
 )
 
 type EdgeDaemon struct {
 	interval         int
 	edgeListFilename string
 	attemptedCids    map[string]bool // Map of CIDs that have already been queried - to avoid duplicate queries to DDM
+	DDM              *s.DDMApi
+	totalSuccess     int
+	totalFail        int
 	// TODO: this could use a lot of memory as it's indexing all CIDs across all edges - maybe use a bloom filter or some other approach instead?
 }
 
-var (
-	log = logging.Logger("edge-daemon")
-)
-
-func NewEdgeDaemon(interval int, edgeListFilename string) *EdgeDaemon {
+func NewEdgeDaemon(interval int, edgeListFilename string, ddmUrl string, ddmKey string) *EdgeDaemon {
 	// Check to ensure that the edgeListFilename exists
 	if _, err := os.Stat(edgeListFilename); os.IsNotExist(err) {
 		log.Fatalf("Edge list file %s does not exist", edgeListFilename)
@@ -30,6 +30,7 @@ func NewEdgeDaemon(interval int, edgeListFilename string) *EdgeDaemon {
 		interval:         interval,
 		edgeListFilename: edgeListFilename,
 		attemptedCids:    make(map[string]bool),
+		DDM:              s.NewDDMApi(ddmUrl, ddmKey),
 	}
 }
 
@@ -40,7 +41,13 @@ func (ed *EdgeDaemon) Run() {
 			log.Errorf("error aggregating content: %s", err)
 		}
 
-		ed.publishContent(cnt)
+		success, fail := ed.publishContent(cnt)
+		log.Infof(util.Gray+"published %d contents to DDM, %d succeeded, %d failed"+util.Reset, len(cnt), success, fail)
+
+		ed.totalSuccess += success
+		ed.totalFail += fail
+
+		log.Infof(util.Green+"Total count success: %d, fail: %d"+util.Reset, ed.totalSuccess, ed.totalFail)
 		time.Sleep(time.Duration(ed.interval))
 	}
 }
@@ -89,9 +96,26 @@ func (ed *EdgeDaemon) aggregateContent() (map[string]s.BucketContent, error) {
 	return result, nil
 }
 
-func (ed *EdgeDaemon) publishContent(map[string]s.BucketContent) {
-	//TODO
-	// for each content, POST it to DDM /contents endpoint for the given tag
+func (ed *EdgeDaemon) publishContent(contents map[string]s.BucketContent) (int, int) {
+	var request s.ContentsRequest
 
-	// write output to specified log file for each of the contents
+	// Create a DDM content list from the edge content list
+	for _, cnt := range contents {
+		request = append(request, s.DDMContent{
+			CommP:      cnt.PieceCID,
+			PayloadCID: cnt.PayloadCID,
+			PaddedSize: cnt.PieceSize,
+			Size:       cnt.Size,
+			Collection: cnt.Collection,
+		})
+	}
+
+	// Publish the list of contents to DDM
+	res, err := ed.DDM.PublishContent(&request)
+	if err != nil {
+		log.Errorf("error publishing content to DDM: %s", err)
+		return 0, 0
+	}
+
+	return len(res.Success), len(res.Fail)
 }
