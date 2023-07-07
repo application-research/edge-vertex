@@ -43,6 +43,7 @@ func (ed *EdgeDaemon) Run() {
 		cnt, err := ed.aggregateContent()
 		if err != nil {
 			log.Errorf("error aggregating content: %s", err)
+			continue
 		}
 
 		success, fail := ed.publishContent(cnt)

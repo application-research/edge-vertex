@@ -14,7 +14,7 @@ type EdgeApi interface {
 type EdgeUrid struct{}
 
 func (e *EdgeUrid) GetContents(edgeUri string) (*OpenBucketsResponse, error) {
-	resp, err := http.Get(edgeUri + "/buckets/get-open")
+	resp, err := http.Get(edgeUri + "/buckets/get/open")
 	if err != nil {
 		return nil, fmt.Errorf("could not reach edge api: %s", err)
 	}
