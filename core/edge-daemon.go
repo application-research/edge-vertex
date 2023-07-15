@@ -46,6 +46,8 @@ func (ed *EdgeDaemon) Run() {
 			continue
 		}
 
+		log.Debugf("publishing %+v contents to DDM", cnt)
+
 		success, fail := ed.publishContent(cnt)
 		log.Infof(util.Gray+"published %d contents to DDM, %d succeeded, %d failed"+util.Reset, len(cnt), success, fail)
 
