@@ -16,11 +16,12 @@ type DDMApi struct {
 
 type ContentsRequest []DDMContent
 type DDMContent struct {
-	PayloadCID string `json:"payload_cid"`
-	CommP      string `json:"commp"`
-	PaddedSize uint   `json:"padded_size"`
-	Size       uint   `json:"size"`
-	Collection string `json:"collection"`
+	PayloadCID      string `json:"payload_cid"`
+	CommP           string `json:"commp"`
+	PaddedSize      uint   `json:"padded_size"`
+	Size            uint   `json:"size"`
+	ContentLocation string `json:"content_location"`
+	Collection      string `json:"collection"`
 }
 
 type ContentsResponse struct {

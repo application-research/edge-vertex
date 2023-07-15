@@ -104,11 +104,12 @@ func (ed *EdgeDaemon) publishContent(contents map[string]s.BucketContent) (int, 
 	// Create a DDM content list from the edge content list
 	for _, cnt := range contents {
 		request = append(request, s.DDMContent{
-			CommP:      cnt.PieceCID,
-			PayloadCID: cnt.PayloadCID,
-			PaddedSize: cnt.PieceSize,
-			Size:       cnt.Size,
-			Collection: cnt.Collection,
+			CommP:           cnt.PieceCID,
+			PayloadCID:      cnt.PayloadCID,
+			PaddedSize:      cnt.PieceSize,
+			Size:            cnt.Size,
+			Collection:      cnt.Collection,
+			ContentLocation: cnt.DownloadURL,
 		})
 	}
 

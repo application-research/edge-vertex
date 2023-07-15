@@ -30,12 +30,23 @@ func (e *EdgeUrid) GetContents(edgeUri string) (*OpenBucketsResponse, error) {
 
 	defer resp.Body.Close()
 
-	result, err := UnmarshalOpenBucketsResponse(body)
+	rawOpenBuckets, err := UnmarshalOpenBucketsResponse(body)
 	if err != nil {
 		return nil, fmt.Errorf("could not unmarshal open buckets response %s : %s", err, string(body))
 	}
 
-	return &result, nil
+	result := prependDownloadUrl(edgeUri, &rawOpenBuckets)
+
+	return result, nil
+}
+
+// Includes the edge URL in the download URL, ex) /gw/baga123 -> http://edge.com/gw/baga123
+func prependDownloadUrl(baseUrl string, content *OpenBucketsResponse) *OpenBucketsResponse {
+	for i := range *content {
+		(*content)[i].DownloadURL = baseUrl + (*content)[i].DownloadURL
+	}
+
+	return content
 }
 
 func UnmarshalOpenBucketsResponse(data []byte) (OpenBucketsResponse, error) {
