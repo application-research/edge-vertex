@@ -11,7 +11,7 @@ import (
 )
 
 type EdgeDaemon struct {
-	interval         int
+	interval         time.Duration
 	edgeListFilename string
 	attemptedCids    map[string]bool // Map of CIDs that have already been queried - to avoid duplicate queries to DDM
 	DDM              *s.DDMApi
@@ -29,7 +29,7 @@ func NewEdgeDaemon(interval int, edgeListFilename string, ddmUrl string, ddmKey 
 	}
 
 	return &EdgeDaemon{
-		interval:         interval,
+		interval:         time.Duration(time.Second) * time.Duration(interval),
 		edgeListFilename: edgeListFilename,
 		listReader:       &s.JsonEdgeListReader{Filename: edgeListFilename},
 		edgeApi:          &s.EdgeUrid{},
@@ -53,7 +53,7 @@ func (ed *EdgeDaemon) Run() {
 		ed.totalFail += fail
 
 		log.Infof(util.Green+"Total count success: %d, fail: %d"+util.Reset, ed.totalSuccess, ed.totalFail)
-		time.Sleep(time.Duration(ed.interval))
+		time.Sleep(ed.interval)
 	}
 }
 
