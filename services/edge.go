@@ -67,7 +67,7 @@ type BucketContent struct {
 	Size        uint          `json:"size"`
 	CreatedAt   string        `json:"created_at"`
 	UpdatedAt   string        `json:"updated_at"`
-	Collection  string        `json:"collection"`
+	Collection  string        `json:"collection_name"`
 }
 
 type ContentStatus string
