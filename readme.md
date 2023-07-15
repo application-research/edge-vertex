@@ -20,7 +20,7 @@ ex)
 
 2. run edge-vertex and provide env vars or flags so it can access DDM api
 ```bash
-edge-vertex \
+edge-vertex daemon \
   --ddm-api https://delta-dm.estuary.tech \
   --ddm-token <token> \
   --interval 60 \ # optional, defaults to 60 seconds
